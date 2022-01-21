@@ -1,4 +1,4 @@
-module semprini/tameimap2
+module github.com/bcampbell/tameimap
 
 go 1.17
 

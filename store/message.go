@@ -1,4 +1,4 @@
-package arse
+package store
 
 import (
 	"bufio"

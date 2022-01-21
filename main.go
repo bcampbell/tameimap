@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"semprini/tameimap2/arse"
+	"github.com/bcampbell/tameimap/store"
 	//	"github.com/emersion/go-imap/backend/memory"
 	"github.com/emersion/go-imap/server"
 	"os"
@@ -10,7 +10,7 @@ import (
 
 func main() {
 	// Create a memory backend
-	be, err := arse.New()
+	be, err := store.New()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERR: %s\n", err)
 		os.Exit(1)

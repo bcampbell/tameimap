@@ -1,11 +1,8 @@
-package arse
+package store
 
 import (
 	"errors"
-	//"fmt"
-	//"io/fs"
 	"os"
-	//"path/filepath"
 	"strings"
 
 	"github.com/emersion/go-imap/backend"
