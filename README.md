@@ -7,7 +7,7 @@ A simple IMAP server which serves up email from local files, for testing.
 Requires golang to compile and install:
 
 ```
-$ go install http://github.com/bcampbell/tameimap
+$ go install github.com/bcampbell/tameimap
 ```
 
 I can probably put up a binary release if anyone really needs it - get in contact.
