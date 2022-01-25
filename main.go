@@ -16,8 +16,10 @@ var opts struct {
 
 func usage() {
 
-	fmt.Fprintf(os.Stderr, `Usage: %s [OPTIONS] [FILE] ...
-A simple IMAP server.
+	fmt.Fprintf(os.Stderr, `Usage: %s [OPTIONS]
+A simple IMAP server for testing.
+Currently just serves up one hard-coded user (name "bob", password "pass") from directory ./bob
+
 Options:
 `, os.Args[0])
 
