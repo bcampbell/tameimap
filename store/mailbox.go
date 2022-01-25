@@ -2,8 +2,6 @@ package store
 
 import (
 	"fmt"
-	//"io/ioutil"
-	//	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -11,7 +9,6 @@ import (
 	"time"
 
 	"github.com/emersion/go-imap"
-	//"github.com/emersion/go-imap/backend"
 	"github.com/emersion/go-imap/backend/backendutil"
 )
 
@@ -30,45 +27,32 @@ type Mailbox struct {
 	children []*Mailbox
 }
 
-// fsPath returns the full path for where this mailbox's message files are.
-// (eg "/tmp/bob/INBOX")
-func (mbox *Mailbox) fsPath() string {
-
-	if mbox.parent == nil {
-		// root has no dir of it's own.
-		return filepath.Join(mbox.user.rootPath)
-	}
-
-	return filepath.Join(mbox.parent.fsPath(), mbox.fsName)
-}
-
-// Create a new mailbox, scan for messages and child mailboxes (recursively).
-// Will create new dir in filesystem if it doens't already exist.
+// NewMailbox creates a new mailbox, scans for messages and then recursively for
+// child mailboxes.
+// Will create new dir in filesystem if it doesn't already exist.
+// fsName is the partial name of the mailbox (just the directory name, under the parent).
 func NewMailbox(user *User, parent *Mailbox, fsName string) (*Mailbox, error) {
 	mbox := &Mailbox{
 		Subscribed: false,
 		Messages:   []*Message{},
 		user:       user,
-		fsName:     fsName,
+		fsName:     fsName, // just the
 		parent:     parent,
 		children:   []*Mailbox{},
 	}
 
-	fmt.Printf("new '%s'\n", mbox.Name())
-
 	// Recursive scan for messages and child mailboxes
 	ents, err := os.ReadDir(mbox.fsPath())
-	if os.IsNotExist(err) {
-		// Create dir if it doesn't already exist.
-		err = os.Mkdir(mbox.fsPath(), 0777)
-		if err != nil {
-			return nil, err
-		}
-		fmt.Printf(" -> mkdir '%s' ok", mbox.fsPath())
-		// Done. No need to scan an empty dir.
-		return mbox, nil
-	}
 	if err != nil {
+		if !os.IsNotExist(err) {
+			// Create dir if it doesn't already exist.
+			err = os.Mkdir(mbox.fsPath(), 0777)
+			if err != nil {
+				return nil, err
+			}
+			// Done. No need to scan an empty dir.
+			return mbox, nil
+		}
 		return nil, err
 	}
 
@@ -88,7 +72,6 @@ func NewMailbox(user *User, parent *Mailbox, fsName string) (*Mailbox, error) {
 			fmt.Fprintf(os.Stderr, "SKIPPING %s: %s\n", ent.Name(), err)
 		}
 
-		fmt.Printf("%s: %s\n", mbox.Name(), ent.Name())
 		msg := &Message{
 			Uid:      uid,
 			Date:     inf.ModTime(),
@@ -102,7 +85,18 @@ func NewMailbox(user *User, parent *Mailbox, fsName string) (*Mailbox, error) {
 	return mbox, nil
 }
 
-// Return the full IMAP name for the mailbox ("INBOX", "stuff/todo" etc).
+// fsPath() returns the full path for where this mailbox's message files are.
+// (eg "/tmp/bob/INBOX")
+func (mbox *Mailbox) fsPath() string {
+
+	if mbox.parent == nil {
+		// root has no dir of it's own.
+		return filepath.Join(mbox.user.rootPath)
+	}
+	return filepath.Join(mbox.parent.fsPath(), mbox.fsName)
+}
+
+// Name() returns the full IMAP name for the mailbox ("INBOX", "stuff/todo" etc).
 func (mbox *Mailbox) Name() string {
 	parts := []string{}
 	for p := mbox; p.parent != nil; p = p.parent {
@@ -281,12 +275,10 @@ func (mbox *Mailbox) CreateMessage(flags []string, date time.Time, body imap.Lit
 	}
 
 	mbox.Messages = append(mbox.Messages, msg)
-	fmt.Printf("%s: new message '%s'\n", mbox.Name(), msg.filename)
 	return nil
 }
 
 func (mbox *Mailbox) UpdateMessagesFlags(uid bool, seqset *imap.SeqSet, op imap.FlagsOp, flags []string) error {
-	fmt.Printf("UpdateMessageFlags... %q\n", flags)
 	for i, msg := range mbox.Messages {
 		var id uint32
 		if uid {
@@ -365,8 +357,6 @@ func (mbox *Mailbox) CopyMessages(uid bool, seqset *imap.SeqSet, destName string
 			filename: filepath.Base(destFile.Name()),
 			mbox:     dest,
 		}
-		fmt.Printf("Copy %s -> %s\n", srcFile.Name(), destFile.Name())
-
 		dest.Messages = append(dest.Messages, destMsg)
 	}
 

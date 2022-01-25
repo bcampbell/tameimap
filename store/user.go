@@ -15,6 +15,8 @@ type User struct {
 	rootMailbox *Mailbox
 }
 
+// NewUser creates a new User, with messages stored under the given dir.
+// name and pwd are the login name and password respectively.
 func NewUser(dir, name, pwd string) (*User, error) {
 	u := &User{
 		rootPath: dir,
@@ -22,6 +24,7 @@ func NewUser(dir, name, pwd string) (*User, error) {
 		password: pwd,
 	}
 
+	// Users have a single anonymous root mailbox to simplify the heirarchy.
 	root, err := NewMailbox(u, nil, "")
 	if err != nil {
 		return nil, err
